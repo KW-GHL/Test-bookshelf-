@@ -1,107 +1,161 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Bookshelf Hyphenation Demo</title>
   <style>
-    * { box-sizing: border-box; margin:0; padding:0; }
+    /* —— 通用重置 —— */
+    * { margin:0; padding:0; box-sizing:border-box; }
     body {
-      font-family: Arial, sans-serif;
-      background: #f0f0f0;
-      color: #333;
-      overflow-x: hidden;
+      background:#f0f0f0;
+      font-family:Arial,sans-serif;
+      color:#333;
+      overflow-x:hidden;
+      padding:20px;
     }
-    h1 { text-align:center; color:#ef3125; margin:20px 0; }
+    h1 { text-align:center; color:#ef3125; margin-bottom:20px; }
+
+    /* —— 对比容器 —— */
     .demo-wrapper {
-      display: flex;
-      justify-content: space-around;
-      gap: 10px;
-      padding: 0 10px 40px;
+      display:flex;
+      gap:20px;
+      max-width:1200px;
+      margin:0 auto;
     }
     .demo-section {
-      width: 48%;
-      background: #fff;
+      flex:1;
+      background:#fff;
       border:1px solid #ddd;
       border-radius:4px;
-      overflow: hidden;
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
     }
     .demo-section h2 {
-      background:#ef3125; color:#fff; text-align:center;
-      padding:10px 0; font-size:1rem;
+      background:#ef3125;
+      color:#fff;
+      text-align:center;
+      padding:10px;
+      font-size:1rem;
     }
-    /* 公共的书架 & Modal 样式 */
+
+    /* —— 书架样式 —— */
     .bookshelf-container {
-      position: relative; width:100%; height:400px;
-      perspective:800px; background:#f0f0f0;
-      display:flex; justify-content:space-evenly; align-items:flex-end;
-      overflow:hidden;
+      position: relative;
+      flex:1;
+      perspective: 800px;
+      background: #f0f0f0;
+      display: flex;
+      justify-content: space-evenly;
+      align-items: flex-end;
+      overflow: hidden;
     }
-    .bookshelf-container .shelf-bar {
-      position:absolute; bottom:0; left:0; width:100%; height:60px;
-      background:#8B4513; box-shadow:0 -4px 6px rgba(0,0,0,0.3);
-      z-index:1;
+    .shelf-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      background: #8B4513;
+      box-shadow: 0 -4px 6px rgba(0,0,0,0.3);
+      z-index: 1;
     }
     .shelf-title {
-      position:absolute; top:50%; left:50%;
-      transform:translate(-50%,-50%);
-      color:#fff; font-weight:bold;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #fff;
+      font-weight: bold;
     }
     .book {
-      position:absolute; bottom:60px;
-      width:60px; height:300px; background:#ef3125;
-      cursor:pointer; transform-origin:left bottom;
-      box-shadow:0 2px 6px rgba(0,0,0,0.2);
-      transition:transform .4s, box-shadow .3s;
+      position: absolute;
+      bottom: 60px;
+      width: 60px;
+      height: 300px;
+      background: #ef3125;
+      cursor: pointer;
+      transform-origin: left bottom;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      transition: transform .4s, box-shadow .3s;
+      overflow: visible;
     }
-    .book:hover { box-shadow:0 4px 12px rgba(0,0,0,0.3); }
-    .book.open { transform:translateX(120px) rotateY(-30deg); z-index:10; }
+    .book:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    .book.open { transform: translateX(120px) rotateY(-30deg); z-index:10; }
     .spine-text {
-      position:absolute; top:50%; left:50%;
-      transform:translate(-50%,-50%) rotate(90deg);
-      color:#fff; font-size:16px; font-weight:bold;
-      white-space:nowrap;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%,-50%) rotate(90deg);
+      color: #fff;
+      font-size: 14px;
+      font-weight: bold;
+      white-space: nowrap;
     }
-    /* 两页效果（不在 demo 中调出，这里保留） */
-    .left-page, .right-page { display:none; }
 
-    /* Modal 基础 */
+    /* —— 弹窗样式 —— */
     .overlay {
-      position:fixed; top:0; left:0; width:100vw; height:100vh;
-      background:rgba(0,0,0,.6); display:none;
-      justify-content:center; align-items:center; z-index:20;
+      position: fixed;
+      top:0; left:0;
+      width:100vw; height:100vh;
+      background: rgba(0,0,0,0.6);
+      display:none;
+      justify-content:center;
+      align-items:center;
+      z-index:20;
     }
     .overlay.show { display:flex; }
     .modal {
-      position:relative; width:90%; max-width:400px;
-      background:#fff; border-radius:8px; overflow:hidden;
-      box-shadow:0 8px 24px rgba(0,0,0,0.3);
+      position: relative;
+      width: 90%;
+      max-width: 400px;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
     }
     .modal::before {
-      content:""; position:absolute; top:0; left:50%;
-      transform:translateX(-3px); width:6px; height:100%;
+      content:"";
+      position:absolute;
+      top:0; left:50%;
+      transform: translateX(-3px);
+      width: 6px; height:100%;
       background:#ef3125;
     }
     .modal-content {
-      display:flex; padding:20px 20px 40px; position:relative; z-index:1;
+      display:flex;
+      padding:20px;
+      position:relative;
+      z-index:1;
+      color:#333;
+      line-height:1.6;
     }
     .modal-left, .modal-right {
-      flex:1; padding:0 10px;
+      flex:1;
+      padding:0 10px;
     }
     .modal-left h4, .modal-right h4 {
-      margin-bottom:10px; color:#ef3125;
+      margin-bottom:10px;
+      color:#ef3125;
+      font-size:1.2rem;
     }
     .modal-left p, .modal-right p {
       margin-bottom:8px;
     }
     .modal-close {
-      position:absolute; top:12px; right:12px;
-      background:#ef3125; color:#fff; border:none;
-      border-radius:4px; padding:6px 12px; cursor:pointer;
+      position:absolute;
+      top:12px; right:12px;
+      background:#ef3125;
+      color:#fff;
+      border:none;
+      border-radius:4px;
+      padding:6px 12px;
+      cursor:pointer;
       z-index:2;
     }
     .modal-close:hover { background:#d02a1f; }
 
-    /* —— 接下里是左右两种断字设置 —— */
+    /* —— 断字对比 —— */
     .no-hyphens .modal-left p,
     .no-hyphens .modal-right p {
       hyphens: none;
@@ -109,20 +163,22 @@
     .auto-hyphens .modal-left p,
     .auto-hyphens .modal-right p {
       hyphens: auto;
-      text-align-last: left;    /* 最后一行左对齐 */
+      text-align-last: left;
       text-justify: inter-word;
       word-wrap: break-word;
     }
   </style>
 </head>
 <body>
+
   <h1>Bookshelf Demo: Hyphenation Comparison</h1>
   <div class="demo-wrapper">
-    <!-- 关闭断字版 -->
+
+    <!-- —— 左侧：关闭断字 —— -->
     <div class="demo-section no-hyphens">
       <h2>No Hyphenation</h2>
-      <div class="bookshelf-container" id="shelf1">
-        <!-- 八本书，left 值随窗口调整 -->
+      <div class="bookshelf-container">
+        <!-- 八本书，调整 left 值以铺满 -->
         <div class="book" id="b1-1" style="left:20px"><div class="spine-text">Trusted Legal Experience</div></div>
         <div class="book" id="b1-2" style="left:100px"><div class="spine-text">Clear and Practical Advice</div></div>
         <div class="book" id="b1-3" style="left:180px"><div class="spine-text">Personalised Approach</div></div>
@@ -133,8 +189,8 @@
         <div class="book" id="b1-8" style="left:580px"><div class="spine-text">Comprehensive Service</div></div>
         <div class="shelf-bar"><div class="shelf-title">Why Clients Choose Grope Hamilton Lawyers</div></div>
       </div>
-      <!-- 对应的 modals -->
-      <div id="modal1-1" class="overlay">
+      <!-- 对应的弹窗，每个书一个 -->
+      <div id="modal1-8" class="overlay">
         <div class="modal">
           <button class="modal-close">Close</button>
           <div class="modal-content">
@@ -152,13 +208,12 @@
           </div>
         </div>
       </div>
-      <!-- 更多 modals 按需添加… -->
     </div>
 
-    <!-- 自动断字版 -->
+    <!-- —— 右侧：自动断字 —— -->
     <div class="demo-section auto-hyphens">
       <h2>With Hyphenation (auto)</h2>
-      <div class="bookshelf-container" id="shelf2">
+      <div class="bookshelf-container">
         <div class="book" id="b2-1" style="left:20px"><div class="spine-text">Trusted Legal Experience</div></div>
         <div class="book" id="b2-2" style="left:100px"><div class="spine-text">Clear and Practical Advice</div></div>
         <div class="book" id="b2-3" style="left:180px"><div class="spine-text">Personalised Approach</div></div>
@@ -169,7 +224,7 @@
         <div class="book" id="b2-8" style="left:580px"><div class="spine-text">Comprehensive Service</div></div>
         <div class="shelf-bar"><div class="shelf-title">Why Clients Choose Grope Hamilton Lawyers</div></div>
       </div>
-      <div id="modal2-1" class="overlay">
+      <div id="modal2-8" class="overlay">
         <div class="modal">
           <button class="modal-close">Close</button>
           <div class="modal-content">
@@ -187,39 +242,42 @@
           </div>
         </div>
       </div>
-      <!-- 更多 modals… -->
     </div>
+
   </div>
 
   <script>
-    // 简化版：打开同组的 modal
-    document.querySelectorAll('.book').forEach(book=>{
-      book.addEventListener('click',()=> {
-        // 自动计算对应 modal id
-        const [prefix, idx] = book.id.split('-'); // b1-8 -> ["b1","8"]
-        const group = prefix==='b1'? 'modal1':'modal2';
+    // 点击任意一个书弹出对应 modal
+    document.querySelectorAll('.book').forEach(el=>{
+      el.addEventListener('click',()=>{
+        // 书本 id 形如 "b1-8" 或 "b2-8"
+        const parts = el.id.split('-');              // ["b1","8"]
+        const group = parts[0]==='b1' ? 'modal1' : 'modal2';
+        const idx   = parts[1];
         const modal = document.getElementById(group+'-'+idx);
-        if(modal) modal.classList.add('show');
-        book.classList.add('open');
+        if(modal) {
+          modal.classList.add('show');
+          el.classList.add('open');
+        }
       });
     });
     // 关闭按钮
     document.querySelectorAll('.modal-close').forEach(btn=>{
-      btn.addEventListener('click', e=>{
-        const ov = btn.closest('.overlay');
-        ov.classList.remove('show');
+      btn.addEventListener('click',()=>{
+        document.querySelectorAll('.overlay.show').forEach(o=>o.classList.remove('show'));
         document.querySelectorAll('.book.open').forEach(b=>b.classList.remove('open'));
       });
     });
-    // 点击遮罩外部也关闭
-    document.querySelectorAll('.overlay').forEach(ov=>{
-      ov.addEventListener('click', e=>{
-        if(e.target===ov){
-          ov.classList.remove('show');
+    // 点击遮罩空白处也关闭
+    document.querySelectorAll('.overlay').forEach(o=>{
+      o.addEventListener('click', e=>{
+        if(e.target===o){
+          o.classList.remove('show');
           document.querySelectorAll('.book.open').forEach(b=>b.classList.remove('open'));
         }
       });
     });
   </script>
+
 </body>
 </html>
