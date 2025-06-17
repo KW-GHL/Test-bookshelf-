@@ -1,496 +1,333 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Bookshelf – No Hyphens + Justify</title>
+  <meta charset="UTF-8">
+  <title>Grope Hamilton Lawyers – 3-Way Hyphenation/Justify Demo</title>
   <style>
-    /* —— Reset & Base —— */
-    * { box-sizing:border-box; margin:0; padding:0 }
-    html,body { width:100%; height:100%; background:#f0f0f0; font-family:Arial,sans-serif; overflow:hidden }
-
-    /* —— Wrapper —— */
-    #book-section { position:relative; width:100%; height:100vh }
-
-    /* —— Bookshelf —— */
+    /* ==== RESET & BASE ==== */
+    * { box-sizing: border-box; margin:0; padding:0; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+      padding: 20px;
+      color: #333;
+    }
+    h1 { text-align:center; color:#ef3125; margin-bottom:30px; }
+    h2 {
+      text-align:center;
+      color:#ef3125;
+      margin: 20px 0 10px;
+    }
+    /* ==== COMMON BOOKSHELF STYLES ==== */
+    .demo {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin-bottom: 40px;
+      overflow: hidden;
+    }
     .bookshelf-container {
-      position:relative; width:100%; height:450px;
-      perspective:800px; background:#f0f0f0;
-      display:flex; justify-content:space-evenly; align-items:flex-end;
-      overflow:hidden;
+      position: relative;
+      height: 400px;
+      perspective: 800px;
+      background: #f0f0f0;
+      display: flex;
+      justify-content: space-evenly;
+      align-items: flex-end;
+      overflow: hidden;
     }
     .shelf-bar {
-      position:absolute; bottom:0; left:0;
-      width:100%; height:80px; background:#8B4513;
-      box-shadow:0 -4px 6px rgba(0,0,0,0.3); z-index:1;
+      position: absolute;
+      bottom: 0; left: 0;
+      width: 100%; height: 60px;
+      background: #8B4513;
+      box-shadow: 0 -4px 6px rgba(0,0,0,0.3);
+      z-index: 1;
     }
     .shelf-title {
-      position:absolute; top:50%; left:50%;
-      transform:translate(-50%, -50%);
-      color:#fff; font-weight:bold; font-size:1.2rem;
+      position: absolute;
+      top:50%; left:50%;
+      transform: translate(-50%,-50%);
+      color:#fff; font-weight:bold;
     }
-
-    /* —— Spine —— */
     .book {
-      position:absolute; bottom:80px;
-      width:80px; height:300px; background:#ef3125;
-      cursor:pointer; transform-origin:left bottom;
-      transition:transform .4s, box-shadow .3s;
+      position: absolute; bottom:60px;
+      width: 60px; height: 300px;
+      background: #ef3125;
+      cursor: pointer;
+      transform-origin: left bottom;
+      transition: transform .4s, box-shadow .3s;
       box-shadow:0 2px 6px rgba(0,0,0,0.2);
-      overflow:visible;
+      overflow: visible;
     }
-    .book:hover { box-shadow:0 4px 12px rgba(0,0,0,0.3) }
+    .book:hover { box-shadow:0 4px 12px rgba(0,0,0,0.3); }
+    .book.open {
+      transform: translateX(120px) rotateY(-30deg);
+      z-index: 10;
+    }
     .spine-text {
       position:absolute; top:50%; left:50%;
-      transform:translate(-50%,-50%) rotate(90deg);
-      color:#fff; font-weight:bold; font-size:14px; white-space:nowrap;
+      transform: translate(-50%,-50%) rotate(90deg);
+      color:#fff; font-size:14px; font-weight:bold;
+      white-space: nowrap;
+      text-align:center;
+      user-select:none;
+      padding:0 5px;
     }
-
-    /* —— Pages —— */
-    .left-page, .right-page {
-      position:absolute; top:0;
-      width:260px; height:380px; background:#fff;
-      box-shadow:2px 2px 6px rgba(0,0,0,0.2);
-      padding:20px; overflow-y:auto; color:#333;
-      opacity:0; transform:scaleX(0); transform-origin:left top;
-      transition:opacity .3s, transform .3s; z-index:5;
+    /* ==== COMMON MODAL STYLES ==== */
+    .overlay {
+      position: fixed; top:0; left:0;
+      width:100vw; height:100vh;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 20;
     }
-    .left-page { left:-260px }
-    .right-page { left:100% }
-
-    /* —— Open State —— */
-    .book.open {
-      transform:translateX(260px) rotateY(-30deg);
-      z-index:10;
+    .overlay.show { display:flex; }
+    .modal {
+      position: relative;
+      width: 90%; max-width: 500px;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow:0 8px 24px rgba(0,0,0,0.3);
     }
-    .book.open .left-page,
-    .book.open .right-page {
-      opacity:1; transform:scaleX(1);
+    .modal::before {
+      content:"";
+      position:absolute; top:0; left:50%;
+      transform:translateX(-3px);
+      width:6px; height:100%;
+      background:#ef3125;
     }
-
-    /* —— 文本排版 —— */
-    /* 禁用自动断字，文字两端对齐 */
-    .left-page p,
-    .right-page p {
-      hyphens: none;
-      text-align: justify;
+    .modal-content {
+      display:flex;
+      padding:20px;
+      color:#333;
       line-height:1.6;
+      position:relative;
+      z-index:1;
+    }
+    .modal-left, .modal-right {
+      flex:1;
+      padding: 0 10px;
+    }
+    .modal-left h4, .modal-right h4 {
+      margin-bottom:10px;
+      color:#ef3125;
+      font-size:1.2rem;
+    }
+    .modal-left p, .modal-right p {
       margin-bottom:8px;
     }
-  </style>
-</head>
-<body>
-  <section id="book-section">
-    <div class="bookshelf-container">
-      <div class="shelf-bar">
-        <div class="shelf-title">Why Clients Choose Grope Hamilton Lawyers</div>
-      </div>
-
-      <!-- Book 1 -->
-      <div class="book" style="left:40px">
-        <div class="spine-text">Trusted Experience</div>
-        <div class="left-page">
-          <h4>Trusted Experience</h4>
-          <p>With over 42 years of continuous practice, we’ve earned the trust of generations of clients across a broad range of wills and estate matters.</p>
-        </div>
-        <div class="right-page">
-          <p>We are a proud Law Society of South Australia Gold Alliance Firm, recognized for our commitment to professionalism and ethical practice.</p>
-        </div>
-      </div>
-
-      <!-- Book 2 -->
-      <div class="book" style="left:160px">
-        <div class="spine-text">Clear Advice</div>
-        <div class="left-page">
-          <h4>Clear Advice</h4>
-          <p>We provide advice that is both legally accurate and easy to understand. Clients come to us for guidance they can rely on, without jargon or assumptions.</p>
-        </div>
-        <div class="right-page"><p>&nbsp;</p></div>
-      </div>
-
-      <!-- Book 3 -->
-      <div class="book" style="left:280px">
-        <div class="spine-text">Personalized Approach</div>
-        <div class="left-page">
-          <h4>Personalized Approach</h4>
-          <p>Every matter is different. We tailor our services to your circumstances, focusing on practical, legally sound results that minimize future disputes.</p>
-        </div>
-        <div class="right-page"><p>&nbsp;</p></div>
-      </div>
-
-      <!-- Book 4 -->
-      <div class="book" style="left:400px">
-        <div class="spine-text">Transparent Fees</div>
-        <div class="left-page">
-          <h4>Transparent Fees</h4>
-          <p>We offer clear, upfront pricing with fixed-fee options where appropriate, so you always know what to expect and why it matters.</p>
-        </div>
-        <div class="right-page"><p>&nbsp;</p></div>
-      </div>
-
-      <!-- Book 5 -->
-      <div class="book" style="left:520px">
-        <div class="spine-text">Multilingual Support</div>
-        <div class="left-page">
-          <h4>Multilingual Support</h4>
-          <p>We assist clients from diverse cultural and linguistic backgrounds, ensuring communication is always clear and appropriate for your needs.</p>
-        </div>
-        <div class="right-page"><p>&nbsp;</p></div>
-      </div>
-
-      <!-- Book 6 -->
-      <div class="book" style="left:640px">
-        <div class="spine-text">Professional Care</div>
-        <div class="left-page">
-          <h4>Professional Care</h4>
-          <p>Clients are treated with courtesy, discretion, and genuine care throughout the entire estate-planning process.</p>
-        </div>
-        <div class="right-page"><p>&nbsp;</p></div>
-      </div>
-    </div>
-  </section>
-
-  <script>
-    document.querySelectorAll('.book').forEach(book => {
-      book.addEventListener('click', e => {
-        e.stopPropagation();
-        document.querySelectorAll('.book.open').forEach(b => b!==book && b.classList.remove('open'));
-        book.classList.toggle('open');
-      });
-    });
-    document.body.addEventListener('click', () => {
-      document.querySelectorAll('.book.open').forEach(b => b.classList.remove('open'));
-    });
-  </script>
-</body>
-</html>
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Bookshelf – No Hyphens + Justify</title>
-  <style>
-    /* —— Reset & Base —— */
-    * { box-sizing:border-box; margin:0; padding:0 }
-    html,body { width:100%; height:100%; background:#f0f0f0; font-family:Arial,sans-serif; overflow:hidden }
-
-    /* —— Wrapper —— */
-    #book-section { position:relative; width:100%; height:100vh }
-
-    /* —— Bookshelf —— */
-    .bookshelf-container {
-      position:relative; width:100%; height:450px;
-      perspective:800px; background:#f0f0f0;
-      display:flex; justify-content:space-evenly; align-items:flex-end;
-      overflow:hidden;
+    .modal-close {
+      position:absolute;
+      top:12px; right:12px;
+      background:#ef3125; color:#fff;
+      border:none; border-radius:4px;
+      padding:6px 12px; cursor:pointer;
+      z-index:2;
     }
-    .shelf-bar {
-      position:absolute; bottom:0; left:0;
-      width:100%; height:80px; background:#8B4513;
-      box-shadow:0 -4px 6px rgba(0,0,0,0.3); z-index:1;
-    }
-    .shelf-title {
-      position:absolute; top:50%; left:50%;
-      transform:translate(-50%, -50%);
-      color:#fff; font-weight:bold; font-size:1.2rem;
-    }
+    .modal-close:hover { background:#d02a1f; }
 
-    /* —— Spine —— */
-    .book {
-      position:absolute; bottom:80px;
-      width:80px; height:300px; background:#ef3125;
-      cursor:pointer; transform-origin:left bottom;
-      transition:transform .4s, box-shadow .3s;
-      box-shadow:0 2px 6px rgba(0,0,0,0.2);
-      overflow:visible;
-    }
-    .book:hover { box-shadow:0 4px 12px rgba(0,0,0,0.3) }
-    .spine-text {
-      position:absolute; top:50%; left:50%;
-      transform:translate(-50%,-50%) rotate(90deg);
-      color:#fff; font-weight:bold; font-size:14px; white-space:nowrap;
-    }
-
-    /* —— Pages —— */
-    .left-page, .right-page {
-      position:absolute; top:0;
-      width:260px; height:380px; background:#fff;
-      box-shadow:2px 2px 6px rgba(0,0,0,0.2);
-      padding:20px; overflow-y:auto; color:#333;
-      opacity:0; transform:scaleX(0); transform-origin:left top;
-      transition:opacity .3s, transform .3s; z-index:5;
-    }
-    .left-page { left:-260px }
-    .right-page { left:100% }
-
-    /* —— Open State —— */
-    .book.open {
-      transform:translateX(260px) rotateY(-30deg);
-      z-index:10;
-    }
-    .book.open .left-page,
-    .book.open .right-page {
-      opacity:1; transform:scaleX(1);
-    }
-
-    /* —— 文本排版 —— */
-    /* 禁用自动断字，文字两端对齐 */
-    .left-page p,
-    .right-page p {
-      hyphens: auto;
-      text-align: justify;
-      line-height:1.6;
-      margin-bottom:8px;
-    }
-  </style>
-</head>
-<body>
-  <section id="book-section">
-    <div class="bookshelf-container">
-      <div class="shelf-bar">
-        <div class="shelf-title">Why Clients Choose Grope Hamilton Lawyers</div>
-      </div>
-
-      <!-- Book 1 -->
-      <div class="book" style="left:40px">
-        <div class="spine-text">Trusted Experience</div>
-        <div class="left-page">
-          <h4>Trusted Experience</h4>
-          <p>With over 42 years of continuous practice, we’ve earned the trust of generations of clients across a broad range of wills and estate matters.</p>
-        </div>
-        <div class="right-page">
-          <p>We are a proud Law Society of South Australia Gold Alliance Firm, recognized for our commitment to professionalism and ethical practice.</p>
-        </div>
-      </div>
-
-      <!-- Book 2 -->
-      <div class="book" style="left:160px">
-        <div class="spine-text">Clear Advice</div>
-        <div class="left-page">
-          <h4>Clear Advice</h4>
-          <p>We provide advice that is both legally accurate and easy to understand. Clients come to us for guidance they can rely on, without jargon or assumptions.</p>
-        </div>
-        <div class="right-page"><p>&nbsp;</p></div>
-      </div>
-
-      <!-- Book 3 -->
-      <div class="book" style="left:280px">
-        <div class="spine-text">Personalized Approach</div>
-        <div class="left-page">
-          <h4>Personalized Approach</h4>
-          <p>Every matter is different. We tailor our services to your circumstances, focusing on practical, legally sound results that minimize future disputes.</p>
-        </div>
-        <div class="right-page"><p>&nbsp;</p></div>
-      </div>
-
-      <!-- Book 4 -->
-      <div class="book" style="left:400px">
-        <div class="spine-text">Transparent Fees</div>
-        <div class="left-page">
-          <h4>Transparent Fees</h4>
-          <p>We offer clear, upfront pricing with fixed-fee options where appropriate, so you always know what to expect and why it matters.</p>
-        </div>
-        <div class="right-page"><p>&nbsp;</p></div>
-      </div>
-
-      <!-- Book 5 -->
-      <div class="book" style="left:520px">
-        <div class="spine-text">Multilingual Support</div>
-        <div class="left-page">
-          <h4>Multilingual Support</h4>
-          <p>We assist clients from diverse cultural and linguistic backgrounds, ensuring communication is always clear and appropriate for your needs.</p>
-        </div>
-        <div class="right-page"><p>&nbsp;</p></div>
-      </div>
-
-      <!-- Book 6 -->
-      <div class="book" style="left:640px">
-        <div class="spine-text">Professional Care</div>
-        <div class="left-page">
-          <h4>Professional Care</h4>
-          <p>Clients are treated with courtesy, discretion, and genuine care throughout the entire estate-planning process.</p>
-        </div>
-        <div class="right-page"><p>&nbsp;</p></div>
-      </div>
-    </div>
-  </section>
-
-  <script>
-    document.querySelectorAll('.book').forEach(book => {
-      book.addEventListener('click', e => {
-        e.stopPropagation();
-        document.querySelectorAll('.book.open').forEach(b => b!==book && b.classList.remove('open'));
-        book.classList.toggle('open');
-      });
-    });
-    document.body.addEventListener('click', () => {
-      document.querySelectorAll('.book.open').forEach(b => b.classList.remove('open'));
-    });
-  </script>
-</body>
-</html>
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Bookshelf – No Hyphens + Justify</title>
-  <style>
-    /* —— Reset & Base —— */
-    * { box-sizing:border-box; margin:0; padding:0 }
-    html,body { width:100%; height:100%; background:#f0f0f0; font-family:Arial,sans-serif; overflow:hidden }
-
-    /* —— Wrapper —— */
-    #book-section { position:relative; width:100%; height:100vh }
-
-    /* —— Bookshelf —— */
-    .bookshelf-container {
-      position:relative; width:100%; height:450px;
-      perspective:800px; background:#f0f0f0;
-      display:flex; justify-content:space-evenly; align-items:flex-end;
-      overflow:hidden;
-    }
-    .shelf-bar {
-      position:absolute; bottom:0; left:0;
-      width:100%; height:80px; background:#8B4513;
-      box-shadow:0 -4px 6px rgba(0,0,0,0.3); z-index:1;
-    }
-    .shelf-title {
-      position:absolute; top:50%; left:50%;
-      transform:translate(-50%, -50%);
-      color:#fff; font-weight:bold; font-size:1.2rem;
-    }
-
-    /* —— Spine —— */
-    .book {
-      position:absolute; bottom:80px;
-      width:80px; height:300px; background:#ef3125;
-      cursor:pointer; transform-origin:left bottom;
-      transition:transform .4s, box-shadow .3s;
-      box-shadow:0 2px 6px rgba(0,0,0,0.2);
-      overflow:visible;
-    }
-    .book:hover { box-shadow:0 4px 12px rgba(0,0,0,0.3) }
-    .spine-text {
-      position:absolute; top:50%; left:50%;
-      transform:translate(-50%,-50%) rotate(90deg);
-      color:#fff; font-weight:bold; font-size:14px; white-space:nowrap;
-    }
-
-    /* —— Pages —— */
-    .left-page, .right-page {
-      position:absolute; top:0;
-      width:260px; height:380px; background:#fff;
-      box-shadow:2px 2px 6px rgba(0,0,0,0.2);
-      padding:20px; overflow-y:auto; color:#333;
-      opacity:0; transform:scaleX(0); transform-origin:left top;
-      transition:opacity .3s, transform .3s; z-index:5;
-    }
-    .left-page { left:-260px }
-    .right-page { left:100% }
-
-    /* —— Open State —— */
-    .book.open {
-      transform:translateX(260px) rotateY(-30deg);
-      z-index:10;
-    }
-    .book.open .left-page,
-    .book.open .right-page {
-      opacity:1; transform:scaleX(1);
-    }
-
-    /* —— 文本排版 —— */
-    /* 禁用自动断字，文字两端对齐 */
-    .left-page p,
-    .right-page p {
+    /* ==== SECTION-SPECIFIC OVERRIDES ==== */
+    /* 1) 无断字、左对齐 */
+    #demo-no .modal-left p,
+    #demo-no .modal-right p {
       hyphens: none;
       text-align: left;
-      line-height:1.6;
-      margin-bottom:8px;
+    }
+
+    /* 2) 自动断字、两端对齐 */
+    #demo-auto .modal-left p,
+    #demo-auto .modal-right p {
+      hyphens: auto;
+      text-align: justify;
+      text-justify: inter-word;
+      word-wrap: break-word;
+    }
+
+    /* 3) 无断字、两端对齐 */
+    #demo-just .modal-left p,
+    #demo-just .modal-right p {
+      hyphens: none;
+      text-align: justify;
+      text-justify: inter-word;
+      word-wrap: break-word;
     }
   </style>
 </head>
 <body>
-  <section id="book-section">
+
+  <h1>Bookshelf Demo: 3-Way Hyphenation/Justify</h1>
+
+  <!-- ============ 1. NO HYPHENS ============ -->
+  <section class="demo" id="demo-no">
+    <h2>No Hyphens (Left-aligned)</h2>
     <div class="bookshelf-container">
+      <!-- 8 Books -->
+      <div class="book" data-idx="1" style="left:20px">
+        <div class="spine-text">Trusted Legal Experience</div>
+      </div>
+      <div class="book" data-idx="2" style="left:100px">
+        <div class="spine-text">Clear Practical Advice</div>
+      </div>
+      <div class="book" data-idx="3" style="left:180px">
+        <div class="spine-text">Personalised Approach</div>
+      </div>
+      <div class="book" data-idx="4" style="left:260px">
+        <div class="spine-text">Transparent & Cost-Effective</div>
+      </div>
+      <div class="book" data-idx="5" style="left:340px">
+        <div class="spine-text">Multilingual Support</div>
+      </div>
+      <div class="book" data-idx="6" style="left:420px">
+        <div class="spine-text">Respectful & Responsive</div>
+      </div>
+      <div class="book" data-idx="7" style="left:500px">
+        <div class="spine-text">Efficient & Timely Comm.</div>
+      </div>
+      <div class="book" data-idx="8" style="left:580px">
+        <div class="spine-text">Comprehensive Service</div>
+      </div>
       <div class="shelf-bar">
         <div class="shelf-title">Why Clients Choose Grope Hamilton Lawyers</div>
       </div>
-
-      <!-- Book 1 -->
-      <div class="book" style="left:40px">
-        <div class="spine-text">Trusted Experience</div>
-        <div class="left-page">
-          <h4>Trusted Experience</h4>
-          <p>With over 42 years of continuous practice, we’ve earned the trust of generations of clients across a broad range of wills and estate matters.</p>
+    </div>
+    <!-- Modals (同 8 个，下面示例省略 #demo-no-modal2…modal8，只留 modal1) -->
+    <div id="demo-no-modal1" class="overlay">
+      <div class="modal">
+        <button class="modal-close">Close</button>
+        <div class="modal-content">
+          <div class="modal-left">
+            <h4>Trusted Legal Experience</h4>
+            <p>
+              With over 42 years of continuous practice, we’ve earned the trust of generations of clients across a broad range of wills and estate matters.
+            </p>
+          </div>
+          <div class="modal-right">
+            <p>
+              We are a proud Law Society of South Australia Gold Alliance Firm, recognised for our commitment to professionalism and ethical practice.
+            </p>
+          </div>
         </div>
-        <div class="right-page">
-          <p>We are a proud Law Society of South Australia Gold Alliance Firm, recognized for our commitment to professionalism and ethical practice.</p>
-        </div>
-      </div>
-
-      <!-- Book 2 -->
-      <div class="book" style="left:160px">
-        <div class="spine-text">Clear Advice</div>
-        <div class="left-page">
-          <h4>Clear Advice</h4>
-          <p>We provide advice that is both legally accurate and easy to understand. Clients come to us for guidance they can rely on, without jargon or assumptions.</p>
-        </div>
-        <div class="right-page"><p>&nbsp;</p></div>
-      </div>
-
-      <!-- Book 3 -->
-      <div class="book" style="left:280px">
-        <div class="spine-text">Personalized Approach</div>
-        <div class="left-page">
-          <h4>Personalized Approach</h4>
-          <p>Every matter is different. We tailor our services to your circumstances, focusing on practical, legally sound results that minimize future disputes.</p>
-        </div>
-        <div class="right-page"><p>&nbsp;</p></div>
-      </div>
-
-      <!-- Book 4 -->
-      <div class="book" style="left:400px">
-        <div class="spine-text">Transparent Fees</div>
-        <div class="left-page">
-          <h4>Transparent Fees</h4>
-          <p>We offer clear, upfront pricing with fixed-fee options where appropriate, so you always know what to expect and why it matters.</p>
-        </div>
-        <div class="right-page"><p>&nbsp;</p></div>
-      </div>
-
-      <!-- Book 5 -->
-      <div class="book" style="left:520px">
-        <div class="spine-text">Multilingual Support</div>
-        <div class="left-page">
-          <h4>Multilingual Support</h4>
-          <p>We assist clients from diverse cultural and linguistic backgrounds, ensuring communication is always clear and appropriate for your needs.</p>
-        </div>
-        <div class="right-page"><p>&nbsp;</p></div>
-      </div>
-
-      <!-- Book 6 -->
-      <div class="book" style="left:640px">
-        <div class="spine-text">Professional Care</div>
-        <div class="left-page">
-          <h4>Professional Care</h4>
-          <p>Clients are treated with courtesy, discretion, and genuine care throughout the entire estate-planning process.</p>
-        </div>
-        <div class="right-page"><p>&nbsp;</p></div>
       </div>
     </div>
+    <!-- 剩余 7 个 modal… -->
   </section>
 
+  <!-- ============ 2. AUTO HYPHENS ============ -->
+  <section class="demo" id="demo-auto">
+    <h2>With Hyphens (Auto + Justify)</h2>
+    <div class="bookshelf-container">
+      <!-- books 同上，只改 section id -->
+      <div class="book" data-idx="1" style="left:20px"><div class="spine-text">Trusted Legal Experience</div></div>
+      <div class="book" data-idx="2" style="left:100px"><div class="spine-text">Clear Practical Advice</div></div>
+      <div class="book" data-idx="3" style="left:180px"><div class="spine-text">Personalised Approach</div></div>
+      <div class="book" data-idx="4" style="left:260px"><div class="spine-text">Transparent & Cost-Effective</div></div>
+      <div class="book" data-idx="5" style="left:340px"><div class="spine-text">Multilingual Support</div></div>
+      <div class="book" data-idx="6" style="left:420px"><div class="spine-text">Respectful & Responsive</div></div>
+      <div class="book" data-idx="7" style="left:500px"><div class="spine-text">Efficient & Timely Comm.</div></div>
+      <div class="book" data-idx="8" style="left:580px"><div class="spine-text">Comprehensive Service</div></div>
+      <div class="shelf-bar"><div class="shelf-title">Why Clients Choose Grope Hamilton Lawyers</div></div>
+    </div>
+    <div id="demo-auto-modal1" class="overlay">
+      <div class="modal">
+        <button class="modal-close">Close</button>
+        <div class="modal-content">
+          <div class="modal-left">
+            <h4>Trusted Legal Experience</h4>
+            <p>
+              With over 42 years of continuous practice, we’ve earned the trust of generations of clients across a broad range of wills and estate matters.
+            </p>
+          </div>
+          <div class="modal-right">
+            <p>
+              We are a proud Law Society of South Australia Gold Alliance Firm, recognised for our commitment to professionalism and ethical practice.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- 其余 7 个 modal… -->
+  </section>
+
+  <!-- ============ 3. JUSTIFY ============ -->
+  <section class="demo" id="demo-just">
+    <h2>No Hyphens + Justify</h2>
+    <div class="bookshelf-container">
+      <div class="book" data-idx="1" style="left:20px"><div class="spine-text">Trusted Legal Experience</div></div>
+      <div class="book" data-idx="2" style="left:100px"><div class="spine-text">Clear Practical Advice</div></div>
+      <div class="book" data-idx="3" style="left:180px"><div class="spine-text">Personalised Approach</div></div>
+      <div class="book" data-idx="4" style="left:260px"><div class="spine-text">Transparent & Cost-Effective</div></div>
+      <div class="book" data-idx="5" style="left:340px"><div class="spine-text">Multilingual Support</div></div>
+      <div class="book" data-idx="6" style="left:420px"><div class="spine-text">Respectful & Responsive</div></div>
+      <div class="book" data-idx="7" style="left:500px"><div class="spine-text">Efficient & Timely Comm.</div></div>
+      <div class="book" data-idx="8" style="left:580px"><div class="spine-text">Comprehensive Service</div></div>
+      <div class="shelf-bar"><div class="shelf-title">Why Clients Choose Grope Hamilton Lawyers</div></div>
+    </div>
+    <div id="demo-just-modal1" class="overlay">
+      <div class="modal">
+        <button class="modal-close">Close</button>
+        <div class="modal-content">
+          <div class="modal-left">
+            <h4>Trusted Legal Experience</h4>
+            <p>
+              With over 42 years of continuous practice, we’ve earned the trust of generations of clients across a broad range of wills and estate matters.
+            </p>
+          </div>
+          <div class="modal-right">
+            <p>
+              We are a proud Law Society of South Australia Gold Alliance Firm, recognised for our commitment to professionalism and ethical practice.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- 其余 7 个 modal… -->
+  </section>
+
+  <!-- ==== INTERACTION SCRIPT ==== -->
   <script>
-    document.querySelectorAll('.book').forEach(book => {
-      book.addEventListener('click', e => {
-        e.stopPropagation();
-        document.querySelectorAll('.book.open').forEach(b => b!==book && b.classList.remove('open'));
-        book.classList.toggle('open');
+    document.addEventListener("DOMContentLoaded", () => {
+      // 书本点击打开各自 section 的对应 modal
+      document.querySelectorAll(".book").forEach(book => {
+        book.onclick = e => {
+          e.stopPropagation();
+          const section = book.closest("section").id;      // demo-no / demo-auto / demo-just
+          const idx = book.getAttribute("data-idx");
+          const modal = document.getElementById(`${section}-modal${idx}`);
+          if (!modal) return;
+          // 先重置
+          document.querySelectorAll(".book.open").forEach(b=>b.classList.remove("open"));
+          document.querySelectorAll(".overlay.show").forEach(o=>o.classList.remove("show"));
+          // 打开
+          book.classList.add("open");
+          modal.classList.add("show");
+        };
       });
-    });
-    document.body.addEventListener('click', () => {
-      document.querySelectorAll('.book.open').forEach(b => b.classList.remove('open'));
+      // 关闭按钮
+      document.querySelectorAll(".modal-close").forEach(btn => {
+        btn.onclick = e => {
+          e.stopPropagation();
+          document.querySelectorAll(".overlay.show").forEach(o=>o.classList.remove("show"));
+          document.querySelectorAll(".book.open").forEach(b=>b.classList.remove("open"));
+        };
+      });
+      // 点击遮罩空白也关闭
+      document.querySelectorAll(".overlay").forEach(ov => {
+        ov.onclick = e => {
+          if (e.target === ov) {
+            ov.classList.remove("show");
+            document.querySelectorAll(".book.open").forEach(b=>b.classList.remove("open"));
+          }
+        };
+      });
+      // 点击页面空白收起所有
+      document.body.onclick = () => {
+        document.querySelectorAll(".overlay.show").forEach(o=>o.classList.remove("show"));
+        document.querySelectorAll(".book.open").forEach(b=>b.classList.remove("open"));
+      };
     });
   </script>
 </body>
